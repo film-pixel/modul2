@@ -1,0 +1,1684 @@
+<!doctype html>
+<html lang="id" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Modul CRUD Perpustakaan Digital</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    code, pre, .code-block { font-family: 'JetBrains Mono', monospace; }
+    .code-block {
+      border-radius: 12px;
+      overflow-x: auto;
+      position: relative;
+    }
+    .code-block pre {
+      margin: 0;
+      white-space: pre;
+      word-wrap: normal;
+    }
+    .copy-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .code-block:hover .copy-btn { opacity: 1; }
+    .tab-active {
+      border-bottom: 3px solid #f97316;
+      color: #f97316;
+      font-weight: 700;
+    }
+    .sidebar-link {
+      transition: all 0.15s;
+      border-left: 3px solid transparent;
+    }
+    .sidebar-link:hover, .sidebar-link.active {
+      background: rgba(249,115,22,0.08);
+      border-left-color: #f97316;
+      color: #f97316;
+    }
+    .fade-in {
+      animation: fadeIn 0.35s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .step-num {
+      width: 32px; height: 32px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 50%;
+      font-weight: 700;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    .tooltip-box {
+      background: #1e293b;
+      color: #e2e8f0;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      position: absolute;
+      top: -32px;
+      right: 0;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+  </style>
+  <style>body { box-sizing: border-box; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full bg-slate-50 text-slate-800 overflow-hidden">
+  <div id="app" class="h-full w-full flex flex-col overflow-hidden">
+   <!-- Top Header -->
+   <header id="main-header" class="w-full bg-slate-900 text-white px-6 py-4 flex items-center gap-3 flex-shrink-0">
+    <div class="w-10 h-10 rounded-xl bg-orange-500 flex items-center justify-center">
+     <i data-lucide="book-open" class="w-5 h-5"></i>
+    </div>
+    <div>
+     <h1 id="module-title" class="text-lg font-bold leading-tight">Modul CRUD Perpustakaan Digital</h1>
+     <p class="text-slate-400 text-xs">PHP Native • MySQL • Praktikum Lengkap</p>
+    </div><button id="sidebar-toggle" class="ml-auto lg:hidden p-2 rounded-lg hover:bg-slate-700"> <i data-lucide="menu" class="w-5 h-5"></i> </button>
+   </header>
+   <div class="flex flex-1 overflow-hidden w-full">
+    <!-- Sidebar -->
+    <nav id="sidebar" class="hidden lg:flex flex-col w-64 flex-shrink-0 bg-white border-r border-slate-200 overflow-y-auto py-4">
+     <div class="px-4 mb-3">
+      <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Daftar Materi</span>
+     </div>
+     <div id="nav-links" class="flex flex-col gap-0.5 px-2"></div>
+     <div class="mt-auto px-4 pt-4 border-t border-slate-100 mt-4">
+      <div class="flex items-center gap-2 text-xs text-slate-400">
+       <i data-lucide="info" class="w-3.5 h-3.5"></i> <span>Klik materi untuk navigasi</span>
+      </div>
+     </div>
+    </nav><!-- Main Content -->
+    <main id="main-content" class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+     <div class="max-w-4xl mx-auto">
+      <!-- Progress -->
+      <div class="mb-6 flex items-center gap-3">
+       <div class="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
+        <div id="progress-bar" class="h-full bg-gradient-to-r from-orange-400 to-orange-600 rounded-full transition-all duration-500" style="width:0%"></div>
+       </div><span id="progress-text" class="text-xs font-semibold text-slate-500 whitespace-nowrap">0 / 0</span>
+      </div><!-- Content Area -->
+      <div id="content-area" class="fade-in"></div><!-- Navigation -->
+      <div class="flex items-center justify-between mt-8 pb-8">
+       <button id="btn-prev" class="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-600 font-semibold text-sm hover:bg-slate-50 transition disabled:opacity-40 disabled:cursor-not-allowed"> <i data-lucide="arrow-left" class="w-4 h-4"></i> Sebelumnya </button> <button id="btn-next" class="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-orange-500 text-white font-semibold text-sm hover:bg-orange-600 transition disabled:opacity-40 disabled:cursor-not-allowed"> Selanjutnya <i data-lucide="arrow-right" class="w-4 h-4"></i> </button>
+      </div>
+     </div>
+    </main>
+   </div>
+  </div>
+  <script>
+// ─── Module Data ─────────────────────────────────────────
+const modules = [
+  {
+    id: 'intro',
+    icon: 'target',
+    title: 'Pendahuluan & Tujuan',
+    content: () => `
+      <div class="space-y-6">
+        <div class="bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-200 rounded-2xl p-6">
+          <h2 class="text-2xl font-extrabold text-slate-900 mb-2">🎯 Tujuan Pembelajaran</h2>
+          <p class="text-slate-600 mb-4">Setelah menyelesaikan modul ini, Anda mampu:</p>
+          <ul class="space-y-2">
+            ${['Memahami konsep CRUD (Create, Read, Update, Delete)','Membuat database MySQL untuk perpustakaan digital','Menghubungkan PHP native dengan MySQL menggunakan MySQLi & PDO','Membangun fitur CRUD lengkap: tambah, tampil, edit, hapus buku','Menerapkan validasi form dan keamanan dasar (prepared statements)','Membuat antarmuka sederhana dengan HTML & CSS'].map(t => `<li class="flex items-start gap-2"><span class="step-num bg-orange-500 text-white text-xs mt-0.5">✓</span><span class="text-sm text-slate-700">${t}</span></li>`).join('')}
+          </ul>
+        </div>
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div class="bg-white rounded-xl border border-slate-200 p-5">
+            <div class="flex items-center gap-2 mb-2"><i data-lucide="layers" class="w-5 h-5 text-orange-500"></i><h3 class="font-bold text-sm">Tech Stack</h3></div>
+            <ul class="text-sm text-slate-600 space-y-1">
+              <li>• PHP 7.4+ (Native / Tanpa Framework)</li>
+              <li>• MySQL 5.7+ / MariaDB</li>
+              <li>• XAMPP / Laragon / MAMP</li>
+              <li>• HTML5, CSS3, Bootstrap (opsional)</li>
+            </ul>
+          </div>
+          <div class="bg-white rounded-xl border border-slate-200 p-5">
+            <div class="flex items-center gap-2 mb-2"><i data-lucide="folder-tree" class="w-5 h-5 text-orange-500"></i><h3 class="font-bold text-sm">Struktur Proyek</h3></div>
+            ${codeBlock(`perpustakaan/
+├── config/
+│   └── database.php
+├── index.php        (Read - Daftar Buku)
+├── create.php       (Create - Tambah Buku)
+├── edit.php         (Update - Edit Buku)
+├── delete.php       (Delete - Hapus Buku)
+└── style.css        (Styling opsional)`, 'text')}
+          </div>
+        </div>
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-start gap-3">
+          <i data-lucide="lightbulb" class="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0"></i>
+          <p class="text-sm text-blue-800"><strong>Prasyarat:</strong> Pastikan XAMPP/Laragon sudah terinstal. Letakkan folder proyek di <code class="bg-blue-100 px-1.5 py-0.5 rounded text-xs">htdocs/perpustakaan</code>.</p>
+        </div>
+      </div>`
+  },
+  {
+    id: 'database',
+    icon: 'database',
+    title: 'Membuat Database & Tabel',
+    content: () => `
+      <div class="space-y-6">
+        <h2 class="text-2xl font-extrabold text-slate-900">🗄️ Langkah 1: Membuat Database</h2>
+        <p class="text-slate-600">Buka <strong>phpMyAdmin</strong> atau terminal MySQL, lalu jalankan query berikut:</p>
+        ${codeBlock(`-- Membuat database
+CREATE DATABASE perpustakaan_digital;
+USE perpustakaan_digital;
+
+-- Membuat tabel buku
+CREATE TABLE buku (
+    id          INT AUTO_INCREMENT PRIMARY KEY,
+    judul       VARCHAR(255) NOT NULL,
+    penulis     VARCHAR(255) NOT NULL,
+    penerbit    VARCHAR(255) DEFAULT NULL,
+    tahun       YEAR NOT NULL,
+    isbn        VARCHAR(20) UNIQUE,
+    kategori    VARCHAR(100) DEFAULT NULL,
+    stok        INT DEFAULT 0,
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP 
+                ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Data contoh
+INSERT INTO buku (judul, penulis, penerbit, tahun, isbn, kategori, stok)
+VALUES
+('Laskar Pelangi', 'Andrea Hirata', 'Bentang Pustaka', 2005, '978-979-1227-00-2', 'Fiksi', 12),
+('Bumi Manusia', 'Pramoedya A. Toer', 'Hasta Mitra', 1980, '978-979-3062-00-1', 'Sejarah', 8),
+('Filosofi Teras', 'Henry Manampiring', 'Kompas', 2018, '978-602-412-60-3', 'Self-Help', 15);`, 'sql')}
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4">
+          <h3 class="font-bold text-sm text-amber-800 mb-2">📋 Penjelasan Kolom</h3>
+          <div class="grid sm:grid-cols-2 gap-2 text-xs text-amber-900">
+            ${[['id','Primary key auto increment'],['judul','Judul buku (wajib)'],['penulis','Nama penulis (wajib)'],['penerbit','Nama penerbit'],['tahun','Tahun terbit (YEAR)'],['isbn','Nomor ISBN unik'],['kategori','Kategori buku'],['stok','Jumlah stok buku'],['created_at','Waktu data dibuat'],['updated_at','Waktu data diupdate']].map(([k,v]) => `<div><code class="bg-amber-100 px-1 rounded">${k}</code> — ${v}</div>`).join('')}
+          </div>
+        </div>
+      </div>`
+  },
+  {
+    id: 'koneksi',
+    icon: 'plug',
+    title: 'Koneksi PHP ke MySQL',
+    content: () => `
+      <div class="space-y-6">
+        <h2 class="text-2xl font-extrabold text-slate-900">🔌 Koneksi Database</h2>
+        <p class="text-slate-600">File ini menjadi pusat koneksi. Semua file PHP lain akan meng-<em>include</em> file ini.</p>
+
+        <div class="space-y-2">
+          <div class="flex gap-2">
+            <button onclick="switchTab(this,'mysqli')" class="tab-btn px-4 py-2 text-sm font-semibold border-b-2 tab-active" data-tab="mysqli">MySQLi</button>
+            <button onclick="switchTab(this,'pdo')" class="tab-btn px-4 py-2 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-600" data-tab="pdo">PDO</button>
+          </div>
+          <div id="tab-mysqli">
+            <p class="text-sm text-slate-500 mb-2">📁 <code>config/database.php</code> — Metode MySQLi (Prosedural)</p>
+            ${codeBlock(`<?php
+// config/database.php — Koneksi MySQLi
+
+$host   = "localhost";
+$user   = "root";
+$pass   = "";          // Default XAMPP tanpa password
+$dbname = "perpustakaan_digital";
+
+// Membuat koneksi
+$conn = mysqli_connect($host, $user, $pass, $dbname);
+
+// Cek koneksi
+if (!$conn) {
+    die("Koneksi gagal: " . mysqli_connect_error());
+}
+
+// Set charset UTF-8 (penting untuk karakter Indonesia)
+mysqli_set_charset($conn, "utf8mb4");
+?>`, 'php')}
+          </div>
+          <div id="tab-pdo" class="hidden">
+            <p class="text-sm text-slate-500 mb-2">📁 <code>config/database.php</code> — Metode PDO (Lebih aman & fleksibel)</p>
+            ${codeBlock(`<?php
+// config/database.php — Koneksi PDO
+
+$host   = "localhost";
+$dbname = "perpustakaan_digital";
+$user   = "root";
+$pass   = "";
+
+try {
+    $pdo = new PDO(
+        "mysql:host=$host;dbname=$dbname;charset=utf8mb4",
+        $user,
+        $pass,
+        [
+            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_EMULATE_PREPARES   => false,
+        ]
+    );
+} catch (PDOException $e) {
+    die("Koneksi gagal: " . $e->getMessage());
+}
+?>`, 'php')}
+          </div>
+        </div>
+
+        <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex items-start gap-3">
+          <i data-lucide="shield-check" class="w-5 h-5 text-emerald-500 mt-0.5 flex-shrink-0"></i>
+          <div class="text-sm text-emerald-800">
+            <strong>Rekomendasi:</strong> Gunakan <strong>PDO</strong> untuk proyek baru karena mendukung prepared statements yang lebih baik dan bisa berganti database engine tanpa ubah kode.
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl border border-slate-200 p-5">
+          <h3 class="font-bold text-sm mb-3">🧪 Tes Koneksi</h3>
+          ${codeBlock(`<?php
+// test_koneksi.php
+require_once 'config/database.php';
+
+// Jika menggunakan MySQLi:
+echo "Koneksi berhasil! Server: " . mysqli_get_server_info($conn);
+
+// Jika menggunakan PDO:
+// echo "Koneksi berhasil! Server: " . $pdo->getAttribute(PDO::ATTR_SERVER_VERSION);
+?>`, 'php')}
+          <p class="text-xs text-slate-500 mt-2">Akses via browser: <code class="bg-slate-100 px-1.5 py-0.5 rounded">http://localhost/perpustakaan/test_koneksi.php</code></p>
+        </div>
+      </div>`
+  },
+  {
+    id: 'create',
+    icon: 'plus-circle',
+    title: 'CREATE — Tambah Buku',
+    content: () => `
+      <div class="space-y-6">
+        <h2 class="text-2xl font-extrabold text-slate-900">➕ Fitur Create (Tambah Buku)</h2>
+        <div class="flex items-center gap-2 mb-2">
+          <span class="step-num bg-orange-500 text-white">1</span>
+          <h3 class="font-bold">Form HTML + Proses PHP</h3>
+        </div>
+        <p class="text-sm text-slate-500 mb-2">📁 <code>create.php</code></p>
+        ${codeBlock(`<?php
+require_once 'config/database.php';
+
+$pesan  = "";
+$errors = [];
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Ambil & sanitasi input
+    $judul    = trim(htmlspecialchars($_POST['judul'] ?? ''));
+    $penulis  = trim(htmlspecialchars($_POST['penulis'] ?? ''));
+    $penerbit = trim(htmlspecialchars($_POST['penerbit'] ?? ''));
+    $tahun    = intval($_POST['tahun'] ?? 0);
+    $isbn     = trim($_POST['isbn'] ?? '');
+    $kategori = trim(htmlspecialchars($_POST['kategori'] ?? ''));
+    $stok     = intval($_POST['stok'] ?? 0);
+
+    // Validasi
+    if (empty($judul))   $errors[] = "Judul wajib diisi";
+    if (empty($penulis)) $errors[] = "Penulis wajib diisi";
+    if ($tahun < 1900 || $tahun > date('Y'))
+        $errors[] = "Tahun tidak valid";
+
+    if (empty($errors)) {
+        // Prepared Statement (aman dari SQL Injection)
+        $stmt = mysqli_prepare($conn,
+            "INSERT INTO buku (judul, penulis, penerbit, tahun, isbn, kategori, stok)
+             VALUES (?, ?, ?, ?, ?, ?, ?)"
+        );
+        mysqli_stmt_bind_param($stmt, "sssissi",
+            $judul, $penulis, $penerbit, $tahun, $isbn, $kategori, $stok
+        );
+
+        if (mysqli_stmt_execute($stmt)) {
+            $pesan = "✅ Buku berhasil ditambahkan!";
+            // Redirect untuk menghindari resubmit
+            header("Location: index.php?status=created");
+            exit;
+        } else {
+            $pesan = "❌ Gagal: " . mysqli_error($conn);
+        }
+        mysqli_stmt_close($stmt);
+    }
+}
+?>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Tambah Buku — Perpustakaan Digital</title>
+</head>
+<body>
+    <h1>Tambah Buku Baru</h1>
+
+    <?php if (!empty($errors)): ?>
+        <div style="color:red;">
+            <ul>
+            <?php foreach ($errors as $err): ?>
+                <li><?= $err ?></li>
+            <?php endforeach; ?>
+            </ul>
+        </div>
+    <?php endif; ?>
+
+    <form method="POST" action="">
+        <label>Judul: <input type="text" name="judul" required></label><br><br>
+        <label>Penulis: <input type="text" name="penulis" required></label><br><br>
+        <label>Penerbit: <input type="text" name="penerbit"></label><br><br>
+        <label>Tahun: <input type="number" name="tahun" min="1900" max="<?= date('Y') ?>" required></label><br><br>
+        <label>ISBN: <input type="text" name="isbn"></label><br><br>
+        <label>Kategori:
+            <select name="kategori">
+                <option value="">-- Pilih --</option>
+                <option value="Fiksi">Fiksi</option>
+                <option value="Non-Fiksi">Non-Fiksi</option>
+                <option value="Sejarah">Sejarah</option>
+                <option value="Sains">Sains</option>
+                <option value="Self-Help">Self-Help</option>
+                <option value="Teknologi">Teknologi</option>
+            </select>
+        </label><br><br>
+        <label>Stok: <input type="number" name="stok" min="0" value="0"></label><br><br>
+        <button type="submit">💾 Simpan Buku</button>
+        <a href="index.php">← Kembali</a>
+    </form>
+</body>
+</html>`, 'php')}
+
+        <div class="bg-rose-50 border border-rose-200 rounded-xl p-4 flex items-start gap-3">
+          <i data-lucide="shield-alert" class="w-5 h-5 text-rose-500 mt-0.5 flex-shrink-0"></i>
+          <div class="text-sm text-rose-800">
+            <strong>Keamanan:</strong> Selalu gunakan <code>prepared statements</code> (bind_param) untuk mencegah SQL Injection. JANGAN pernah masukkan input user langsung ke query!
+          </div>
+        </div>
+      </div>`
+  },
+  {
+    id: 'read',
+    icon: 'list',
+    title: 'READ — Tampilkan Buku',
+    content: () => `
+      <div class="space-y-6">
+        <h2 class="text-2xl font-extrabold text-slate-900">📖 Fitur Read (Tampilkan Semua Buku)</h2>
+        <p class="text-sm text-slate-500 mb-2">📁 <code>index.php</code> — Halaman utama</p>
+        ${codeBlock(`<?php
+require_once 'config/database.php';
+
+// Ambil parameter pencarian (opsional)
+$search = trim($_GET['search'] ?? '');
+
+// Query dengan pencarian
+if (!empty($search)) {
+    $stmt = mysqli_prepare($conn,
+        "SELECT * FROM buku WHERE judul LIKE ? OR penulis LIKE ? ORDER BY updated_at DESC"
+    );
+    $like = "%{$search}%";
+    mysqli_stmt_bind_param($stmt, "ss", $like, $like);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+} else {
+    $result = mysqli_query($conn, "SELECT * FROM buku ORDER BY updated_at DESC");
+}
+?>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Perpustakaan Digital</title>
+    <style>
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 10px; border: 1px solid #ddd; text-align: left; }
+        th { background: #f8f9fa; }
+        tr:hover { background: #fff8f0; }
+        .btn { padding: 5px 12px; border-radius: 4px; text-decoration: none; color: white; font-size: 13px; }
+        .btn-edit { background: #3b82f6; }
+        .btn-delete { background: #ef4444; }
+        .btn-add { background: #22c55e; padding: 8px 16px; display: inline-block; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+    <h1>📚 Perpustakaan Digital</h1>
+
+    <!-- Notifikasi -->
+    <?php if (isset($_GET['status'])): ?>
+        <?php if ($_GET['status'] === 'created'): ?>
+            <p style="color:green;">✅ Buku berhasil ditambahkan!</p>
+        <?php elseif ($_GET['status'] === 'updated'): ?>
+            <p style="color:blue;">✅ Buku berhasil diperbarui!</p>
+        <?php elseif ($_GET['status'] === 'deleted'): ?>
+            <p style="color:orange;">🗑️ Buku berhasil dihapus!</p>
+        <?php endif; ?>
+    <?php endif; ?>
+
+    <!-- Pencarian -->
+    <form method="GET" style="margin-bottom:15px;">
+        <input type="text" name="search" placeholder="Cari judul atau penulis..."
+               value="<?= htmlspecialchars($search) ?>">
+        <button type="submit">🔍 Cari</button>
+    </form>
+
+    <a href="create.php" class="btn btn-add">➕ Tambah Buku</a>
+
+    <table>
+        <thead>
+            <tr>
+                <th>No</th><th>Judul</th><th>Penulis</th><th>Penerbit</th>
+                <th>Tahun</th><th>Kategori</th><th>Stok</th><th>Aksi</th>
+            </tr>
+        </thead>
+        <tbody>
+        <?php
+        $no = 1;
+        while ($buku = mysqli_fetch_assoc($result)):
+        ?>
+            <tr>
+                <td><?= $no++ ?></td>
+                <td><?= htmlspecialchars($buku['judul']) ?></td>
+                <td><?= htmlspecialchars($buku['penulis']) ?></td>
+                <td><?= htmlspecialchars($buku['penerbit'] ?? '-') ?></td>
+                <td><?= $buku['tahun'] ?></td>
+                <td><?= htmlspecialchars($buku['kategori'] ?? '-') ?></td>
+                <td><?= $buku['stok'] ?></td>
+                <td>
+                    <a href="edit.php?id=<?= $buku['id'] ?>" class="btn btn-edit">✏️ Edit</a>
+                    <a href="delete.php?id=<?= $buku['id'] ?>" class="btn btn-delete"
+                       onclick="return confirm('Yakin hapus buku ini?')">🗑️ Hapus</a>
+                </td>
+            </tr>
+        <?php endwhile; ?>
+        </tbody>
+    </table>
+
+    <?php if (mysqli_num_rows($result) === 0): ?>
+        <p style="text-align:center; color:#999; padding:20px;">Tidak ada buku ditemukan.</p>
+    <?php endif; ?>
+</body>
+</html>`, 'php')}
+      </div>`
+  },
+  {
+    id: 'update',
+    icon: 'edit',
+    title: 'UPDATE — Edit Buku',
+    content: () => `
+      <div class="space-y-6">
+        <h2 class="text-2xl font-extrabold text-slate-900">✏️ Fitur Update (Edit Buku)</h2>
+        <p class="text-sm text-slate-500 mb-2">📁 <code>edit.php</code></p>
+        ${codeBlock(`<?php
+require_once 'config/database.php';
+
+$id = intval($_GET['id'] ?? 0);
+if ($id === 0) {
+    header("Location: index.php");
+    exit;
+}
+
+// Ambil data buku berdasarkan ID
+$stmt = mysqli_prepare($conn, "SELECT * FROM buku WHERE id = ?");
+mysqli_stmt_bind_param($stmt, "i", $id);
+mysqli_stmt_execute($stmt);
+$result = mysqli_stmt_get_result($stmt);
+$buku   = mysqli_fetch_assoc($result);
+
+if (!$buku) {
+    echo "Buku tidak ditemukan!";
+    exit;
+}
+
+$errors = [];
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $judul    = trim(htmlspecialchars($_POST['judul'] ?? ''));
+    $penulis  = trim(htmlspecialchars($_POST['penulis'] ?? ''));
+    $penerbit = trim(htmlspecialchars($_POST['penerbit'] ?? ''));
+    $tahun    = intval($_POST['tahun'] ?? 0);
+    $isbn     = trim($_POST['isbn'] ?? '');
+    $kategori = trim(htmlspecialchars($_POST['kategori'] ?? ''));
+    $stok     = intval($_POST['stok'] ?? 0);
+
+    if (empty($judul))   $errors[] = "Judul wajib diisi";
+    if (empty($penulis)) $errors[] = "Penulis wajib diisi";
+
+    if (empty($errors)) {
+        $stmt = mysqli_prepare($conn,
+            "UPDATE buku
+             SET judul=?, penulis=?, penerbit=?, tahun=?, isbn=?, kategori=?, stok=?
+             WHERE id=?"
+        );
+        mysqli_stmt_bind_param($stmt, "sssissii",
+            $judul, $penulis, $penerbit, $tahun, $isbn, $kategori, $stok, $id
+        );
+
+        if (mysqli_stmt_execute($stmt)) {
+            header("Location: index.php?status=updated");
+            exit;
+        } else {
+            $errors[] = "Gagal update: " . mysqli_error($conn);
+        }
+    }
+}
+?>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Buku — Perpustakaan Digital</title>
+</head>
+<body>
+    <h1>Edit Buku: <?= htmlspecialchars($buku['judul']) ?></h1>
+
+    <?php if (!empty($errors)): ?>
+        <div style="color:red;">
+            <ul>
+            <?php foreach ($errors as $err): ?>
+                <li><?= $err ?></li>
+            <?php endforeach; ?>
+            </ul>
+        </div>
+    <?php endif; ?>
+
+    <form method="POST">
+        <label>Judul: <input type="text" name="judul" value="<?= htmlspecialchars($buku['judul']) ?>" required></label><br><br>
+        <label>Penulis: <input type="text" name="penulis" value="<?= htmlspecialchars($buku['penulis']) ?>" required></label><br><br>
+        <label>Penerbit: <input type="text" name="penerbit" value="<?= htmlspecialchars($buku['penerbit'] ?? '') ?>"></label><br><br>
+        <label>Tahun: <input type="number" name="tahun" value="<?= $buku['tahun'] ?>" required></label><br><br>
+        <label>ISBN: <input type="text" name="isbn" value="<?= htmlspecialchars($buku['isbn'] ?? '') ?>"></label><br><br>
+        <label>Kategori:
+            <select name="kategori">
+                <option value="">-- Pilih --</option>
+                <?php
+                $kats = ['Fiksi','Non-Fiksi','Sejarah','Sains','Self-Help','Teknologi'];
+                foreach ($kats as $k):
+                ?>
+                    <option value="<?= $k ?>" <?= ($buku['kategori'] === $k) ? 'selected' : '' ?>><?= $k ?></option>
+                <?php endforeach; ?>
+            </select>
+        </label><br><br>
+        <label>Stok: <input type="number" name="stok" value="<?= $buku['stok'] ?>" min="0"></label><br><br>
+        <button type="submit">💾 Simpan Perubahan</button>
+        <a href="index.php">← Kembali</a>
+    </form>
+</body>
+</html>`, 'php')}
+      </div>`
+  },
+  {
+    id: 'delete',
+    icon: 'trash-2',
+    title: 'DELETE — Hapus Buku',
+    content: () => `
+      <div class="space-y-6">
+        <h2 class="text-2xl font-extrabold text-slate-900">🗑️ Fitur Delete (Hapus Buku)</h2>
+        <p class="text-sm text-slate-500 mb-2">📁 <code>delete.php</code></p>
+        ${codeBlock(`<?php
+require_once 'config/database.php';
+
+$id = intval($_GET['id'] ?? 0);
+
+if ($id === 0) {
+    header("Location: index.php");
+    exit;
+}
+
+// Prepared statement untuk keamanan
+$stmt = mysqli_prepare($conn, "DELETE FROM buku WHERE id = ?");
+mysqli_stmt_bind_param($stmt, "i", $id);
+
+if (mysqli_stmt_execute($stmt)) {
+    header("Location: index.php?status=deleted");
+} else {
+    echo "Gagal menghapus buku: " . mysqli_error($conn);
+}
+
+mysqli_stmt_close($stmt);
+exit;
+?>`, 'php')}
+
+        <div class="bg-rose-50 border border-rose-200 rounded-xl p-4">
+          <h3 class="font-bold text-sm text-rose-800 mb-2">⚠️ Keamanan Delete</h3>
+          <p class="text-sm text-rose-700 mb-3">Kode di atas menggunakan GET request. Untuk produksi, gunakan metode POST yang lebih aman:</p>
+          ${codeBlock(`<!-- Versi lebih aman: gunakan form POST -->
+<!-- Di index.php, ganti link hapus dengan form: -->
+<form method="POST" action="delete.php" style="display:inline;"
+      onsubmit="return confirm('Yakin hapus buku ini?')">
+    <input type="hidden" name="id" value="<?= $buku['id'] ?>">
+    <button type="submit" class="btn btn-delete">🗑️ Hapus</button>
+</form>
+
+<!-- Di delete.php, ubah ke: -->
+<?php
+require_once 'config/database.php';
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    header("Location: index.php");
+    exit;
+}
+
+$id = intval($_POST['id'] ?? 0);
+// ... sisanya sama
+?>`, 'php')}
+        </div>
+      </div>`
+  },
+  {
+    id: 'praktikum',
+    icon: 'flask-conical',
+    title: 'Praktikum & Latihan',
+    content: () => `
+      <div class="space-y-6">
+        <h2 class="text-2xl font-extrabold text-slate-900">🧪 Praktikum Mandiri</h2>
+
+        <div class="space-y-4">
+          ${[
+            { level: 'Dasar', color: 'emerald', tasks: [
+              'Jalankan semua file dan pastikan CRUD berfungsi penuh',
+              'Tambahkan 5 buku baru melalui form create',
+              'Edit salah satu buku dan verifikasi perubahannya',
+              'Hapus satu buku dan pastikan hilang dari daftar',
+              'Coba fitur pencarian berdasarkan judul'
+            ]},
+            { level: 'Menengah', color: 'blue', tasks: [
+              'Tambahkan fitur pagination (10 buku per halaman)',
+              'Buat fitur sort berdasarkan kolom (judul, tahun, stok)',
+              'Tambahkan kolom "deskripsi" (TEXT) dan update semua file CRUD',
+              'Implementasikan flash message dengan SESSION',
+              'Tambahkan konfirmasi hapus menggunakan modal/dialog'
+            ]},
+            { level: 'Lanjutan', color: 'purple', tasks: [
+              'Konversikan semua query dari MySQLi ke PDO',
+              'Tambahkan fitur upload cover buku (gambar)',
+              'Buat sistem kategori terpisah (tabel relasi)',
+              'Implementasikan login sederhana untuk admin',
+              'Buat REST API endpoint (JSON response) untuk data buku'
+            ]}
+          ].map(({level, color, tasks}) => `
+            <div class="bg-white rounded-xl border border-slate-200 p-5">
+              <div class="flex items-center gap-2 mb-3">
+                <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-${color}-100 text-${color}-700">Level ${level}</span>
+              </div>
+              <ul class="space-y-2">
+                ${tasks.map((t,i) => `
+                  <li class="flex items-start gap-2">
+                    <span class="step-num bg-${color}-500 text-white text-xs mt-0.5">${i+1}</span>
+                    <span class="text-sm text-slate-700">${t}</span>
+                  </li>
+                `).join('')}
+              </ul>
+            </div>
+          `).join('')}
+        </div>
+      </div>`
+  },
+  {
+    id: 'alur',
+    icon: 'git-branch',
+    title: 'Diagram Alur CRUD',
+    content: () => `
+      <div class="space-y-6">
+        <h2 class="text-2xl font-extrabold text-slate-900">🔄 Diagram Alur Aplikasi</h2>
+        <div class="bg-white rounded-xl border border-slate-200 p-6 overflow-x-auto">
+          <div class="min-w-[600px]">
+            <svg viewBox="0 0 700 420" class="w-full" style="font-family:'Plus Jakarta Sans',sans-serif;">
+              <!-- Background -->
+              <rect width="700" height="420" rx="16" fill="#f8fafc"/>
+              
+              <!-- User -->
+              <rect x="270" y="15" width="160" height="44" rx="22" fill="#f97316" stroke="#ea580c" stroke-width="1.5"/>
+              <text x="350" y="42" text-anchor="middle" fill="white" font-size="14" font-weight="700">👤 User / Browser</text>
+              
+              <!-- Arrow down -->
+              <line x1="350" y1="59" x2="350" y2="85" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow)"/>
+              
+              <!-- index.php -->
+              <rect x="250" y="85" width="200" height="40" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+              <text x="350" y="110" text-anchor="middle" fill="#1e40af" font-size="13" font-weight="600">📖 index.php (READ)</text>
+              
+              <!-- Arrows from index -->
+              <line x1="250" y1="105" x2="130" y2="175" stroke="#22c55e" stroke-width="2" marker-end="url(#arrow)"/>
+              <line x1="350" y1="125" x2="350" y2="175" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrow)"/>
+              <line x1="450" y1="105" x2="570" y2="175" stroke="#ef4444" stroke-width="2" marker-end="url(#arrow)"/>
+              
+              <!-- Create -->
+              <rect x="30" y="175" width="200" height="40" rx="8" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+              <text x="130" y="200" text-anchor="middle" fill="#166534" font-size="13" font-weight="600">➕ create.php (CREATE)</text>
+              
+              <!-- Edit -->
+              <rect x="250" y="175" width="200" height="40" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+              <text x="350" y="200" text-anchor="middle" fill="#1e40af" font-size="13" font-weight="600">✏️ edit.php (UPDATE)</text>
+              
+              <!-- Delete -->
+              <rect x="470" y="175" width="200" height="40" rx="8" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+              <text x="570" y="200" text-anchor="middle" fill="#991b1b" font-size="13" font-weight="600">🗑️ delete.php (DELETE)</text>
+              
+              <!-- Arrows to database.php -->
+              <line x1="130" y1="215" x2="130" y2="280" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5,3"/>
+              <line x1="350" y1="215" x2="350" y2="280" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5,3"/>
+              <line x1="570" y1="215" x2="570" y2="280" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5,3"/>
+              
+              <!-- database.php -->
+              <rect x="100" y="280" width="500" height="40" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+              <text x="350" y="305" text-anchor="middle" fill="#92400e" font-size="13" font-weight="600">🔌 config/database.php (Koneksi MySQLi / PDO)</text>
+              
+              <!-- Arrow to DB -->
+              <line x1="350" y1="320" x2="350" y2="355" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow)"/>
+              
+              <!-- MySQL -->
+              <rect x="220" y="355" width="260" height="48" rx="12" fill="#1e293b" stroke="#475569" stroke-width="1.5"/>
+              <text x="350" y="384" text-anchor="middle" fill="#e2e8f0" font-size="14" font-weight="700">🗄️ MySQL — perpustakaan_digital</text>
+              
+              <!-- Arrow marker -->
+              <defs>
+                <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                  <path d="M 0 0 L 10 5 L 0 10 z" fill="#94a3b8"/>
+                </marker>
+              </defs>
+              
+              <!-- Labels -->
+              <text x="175" y="150" text-anchor="middle" fill="#22c55e" font-size="10" font-weight="600">INSERT</text>
+              <text x="350" y="150" text-anchor="middle" fill="#3b82f6" font-size="10" font-weight="600">UPDATE</text>
+              <text x="525" y="150" text-anchor="middle" fill="#ef4444" font-size="10" font-weight="600">DELETE</text>
+              <text x="65" y="255" fill="#94a3b8" font-size="9">require_once</text>
+              <text x="305" y="255" fill="#94a3b8" font-size="9">require_once</text>
+              <text x="520" y="255" fill="#94a3b8" font-size="9">require_once</text>
+            </svg>
+          </div>
+        </div>
+        
+        <div class="bg-white rounded-xl border border-slate-200 p-5">
+          <h3 class="font-bold text-sm mb-3">📝 Penjelasan Alur</h3>
+          <ol class="space-y-2 text-sm text-slate-700">
+            <li><strong>1.</strong> User mengakses <code class="bg-slate-100 px-1 rounded">index.php</code> → menampilkan semua buku (READ)</li>
+            <li><strong>2.</strong> Klik "Tambah" → <code class="bg-slate-100 px-1 rounded">create.php</code> → INSERT ke MySQL</li>
+            <li><strong>3.</strong> Klik "Edit" → <code class="bg-slate-100 px-1 rounded">edit.php?id=X</code> → UPDATE di MySQL</li>
+            <li><strong>4.</strong> Klik "Hapus" → <code class="bg-slate-100 px-1 rounded">delete.php?id=X</code> → DELETE dari MySQL</li>
+            <li><strong>5.</strong> Semua file menggunakan <code class="bg-slate-100 px-1 rounded">config/database.php</code> untuk koneksi</li>
+          </ol>
+        </div>
+      </div>`
+  },
+  {
+    id: 'tabel-peminjaman',
+    icon: 'git-pull-request',
+    title: 'Database Peminjaman (JOIN)',
+    content: () => `
+      <div class="space-y-6">
+        <h2 class="text-2xl font-extrabold text-slate-900">📋 Membuat Tabel Peminjaman</h2>
+        <p class="text-slate-600">Untuk fitur peminjaman, kita perlu tabel relasi untuk menghubungkan <strong>anggota</strong>, <strong>buku</strong>, dan <strong>peminjaman</strong>.</p>
+
+        <h3 class="text-lg font-bold text-slate-800 mt-6 mb-2">1️⃣ Tabel Anggota (Members)</h3>
+        ${codeBlock(`-- Tabel Anggota Perpustakaan
+CREATE TABLE anggota (
+    id          INT AUTO_INCREMENT PRIMARY KEY,
+    nama        VARCHAR(255) NOT NULL,
+    email       VARCHAR(100) UNIQUE,
+    no_telp     VARCHAR(20),
+    alamat      TEXT,
+    tipe        ENUM('member', 'alumni', 'umum') DEFAULT 'member',
+    status      ENUM('aktif', 'nonaktif') DEFAULT 'aktif',
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Insert data contoh
+INSERT INTO anggota (nama, email, no_telp, tipe, status) VALUES
+('Budi Santoso', 'budi@email.com', '081234567890', 'member', 'aktif'),
+('Siti Nurhaliza', 'siti@email.com', '082345678901', 'member', 'aktif'),
+('Ahmad Wijaya', 'ahmad@email.com', '083456789012', 'alumni', 'aktif');`, 'sql')}
+
+        <h3 class="text-lg font-bold text-slate-800 mt-6 mb-2">2️⃣ Tabel Peminjaman (Relasi JOIN)</h3>
+        ${codeBlock(`-- Tabel Peminjaman (Foreign Key ke buku & anggota)
+CREATE TABLE peminjaman (
+    id              INT AUTO_INCREMENT PRIMARY KEY,
+    id_buku         INT NOT NULL,
+    id_anggota      INT NOT NULL,
+    tgl_pinjam      DATE NOT NULL,
+    tgl_kembali_rencana DATE NOT NULL,
+    tgl_kembali_actual DATE,
+    status          ENUM('dipinjam', 'dikembalikan', 'hilang') DEFAULT 'dipinjam',
+    denda           INT DEFAULT 0,
+    catatan         TEXT,
+    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    -- Foreign Keys
+    FOREIGN KEY (id_buku) REFERENCES buku(id) ON DELETE CASCADE,
+    FOREIGN KEY (id_anggota) REFERENCES anggota(id) ON DELETE CASCADE,
+    
+    -- Index untuk pencarian cepat
+    INDEX idx_buku (id_buku),
+    INDEX idx_anggota (id_anggota),
+    INDEX idx_status (status)
+);
+
+-- Insert data contoh
+INSERT INTO peminjaman 
+(id_buku, id_anggota, tgl_pinjam, tgl_kembali_rencana, status) 
+VALUES
+(1, 1, '2024-01-15', '2024-01-29', 'dipinjam'),
+(2, 2, '2024-01-18', '2024-02-01', 'dipinjam'),
+(3, 1, '2024-01-10', '2024-01-24', 'dikembalikan');`, 'sql')}
+
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
+          <h3 class="font-bold text-sm text-blue-800 mb-2">🔗 Penjelasan Foreign Key</h3>
+          <ul class="text-sm text-blue-700 space-y-1">
+            <li><strong>id_buku:</strong> Referensi ke tabel <code class="bg-blue-100 px-1 rounded">buku(id)</code></li>
+            <li><strong>id_anggota:</strong> Referensi ke tabel <code class="bg-blue-100 px-1 rounded">anggota(id)</code></li>
+            <li><strong>ON DELETE CASCADE:</strong> Jika buku/anggota dihapus, riwayat peminjaman juga terhapus</li>
+            <li><strong>INDEX:</strong> Mempercepat query pencarian berdasarkan status, buku, atau anggota</li>
+          </ul>
+        </div>
+
+        <div class="bg-white rounded-xl border border-slate-200 p-5">
+          <h3 class="font-bold text-sm mb-3">📊 Visualisasi Relasi</h3>
+          <div class="bg-slate-50 p-4 rounded-lg text-xs text-slate-600 font-mono leading-relaxed">
+            <p><strong>ANGGOTA</strong></p>
+            <p>id | nama | email | status</p>
+            <p>━━━━━━━━━━━━━━━━━━━━</p>
+            <p>1  | Budi | ...   | aktif</p>
+            <p>   ↓ (FK)</p>
+            <p><strong>PEMINJAMAN</strong></p>
+            <p>id | id_buku | id_anggota | tgl_pinjam | status</p>
+            <p>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</p>
+            <p>1  | 1       | 1          | 2024-01-15 | dipinjam</p>
+            <p>   ↓ (FK)</p>
+            <p><strong>BUKU</strong></p>
+            <p>id | judul | penulis | stok</p>
+            <p>━━━━━━━━━━━━━━━━━━━━</p>
+            <p>1  | Laskar Pelangi | Andrea H. | 12</p>
+          </div>
+        </div>
+      </div>`
+  },
+  {
+    id: 'query-join',
+    icon: 'link',
+    title: 'Query JOIN - Laporan Peminjaman',
+    content: () => `
+      <div class="space-y-6">
+        <h2 class="text-2xl font-extrabold text-slate-900">🔗 Query JOIN Untuk Laporan</h2>
+        <p class="text-slate-600">Menggunakan <strong>INNER JOIN</strong> & <strong>LEFT JOIN</strong> untuk menggabungkan data dari 3 tabel.</p>
+
+        <h3 class="text-lg font-bold text-slate-800 mb-2">1️⃣ Laporan Semua Peminjaman (dengan JOIN)</h3>
+        ${codeBlock(`-- Tampilkan semua peminjaman dengan detail buku & anggota
+SELECT 
+    p.id,
+    p.tgl_pinjam,
+    p.tgl_kembali_rencana,
+    p.tgl_kembali_actual,
+    p.status,
+    p.denda,
+    b.judul AS nama_buku,
+    b.penulis,
+    a.nama AS nama_anggota,
+    a.no_telp
+FROM peminjaman p
+INNER JOIN buku b ON p.id_buku = b.id
+INNER JOIN anggota a ON p.id_anggota = a.id
+ORDER BY p.tgl_pinjam DESC;`, 'sql')}
+
+        <h3 class="text-lg font-bold text-slate-800 mb-2">2️⃣ Laporan Buku Sedang Dipinjam</h3>
+        ${codeBlock(`-- Hanya buku yang status "dipinjam" (belum dikembalikan)
+SELECT 
+    p.id,
+    b.judul,
+    b.isbn,
+    a.nama AS peminjam,
+    p.tgl_pinjam,
+    p.tgl_kembali_rencana,
+    DATEDIFF(CURDATE(), p.tgl_kembali_rencana) AS hari_telat
+FROM peminjaman p
+INNER JOIN buku b ON p.id_buku = b.id
+INNER JOIN anggota a ON p.id_anggota = a.id
+WHERE p.status = 'dipinjam'
+  AND CURDATE() > p.tgl_kembali_rencana
+ORDER BY hari_telat DESC;`, 'sql')}
+
+        <h3 class="text-lg font-bold text-slate-800 mb-2">3️⃣ Laporan Riwayat Per Anggota</h3>
+        ${codeBlock(`-- Lihat semua peminjaman dari seorang anggota
+SELECT 
+    p.id,
+    b.judul,
+    p.tgl_pinjam,
+    p.tgl_kembali_rencana,
+    p.tgl_kembali_actual,
+    p.status
+FROM peminjaman p
+INNER JOIN buku b ON p.id_buku = b.id
+WHERE p.id_anggota = ? -- Parameter dari PHP
+ORDER BY p.tgl_pinjam DESC;`, 'sql')}
+
+        <h3 class="text-lg font-bold text-slate-800 mb-2">4️⃣ Statistik Buku Paling Sering Dipinjam</h3>
+        ${codeBlock(`-- Top 10 buku yang paling banyak dipinjam
+SELECT 
+    b.id,
+    b.judul,
+    b.penulis,
+    COUNT(p.id) AS jumlah_peminjaman,
+    SUM(CASE WHEN p.status = 'dikembalikan' THEN 1 ELSE 0 END) AS dikembalikan,
+    SUM(CASE WHEN p.status = 'hilang' THEN 1 ELSE 0 END) AS hilang
+FROM peminjaman p
+INNER JOIN buku b ON p.id_buku = b.id
+GROUP BY b.id, b.judul, b.penulis
+ORDER BY jumlah_peminjaman DESC
+LIMIT 10;`, 'sql')}
+
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4">
+          <h3 class="font-bold text-sm text-amber-800 mb-2">📌 Penjelasan JOIN</h3>
+          <ul class="text-sm text-amber-900 space-y-2">
+            <li><strong>INNER JOIN:</strong> Hanya menampilkan baris yang ada di kedua tabel (strict match)</li>
+            <li><strong>LEFT JOIN:</strong> Menampilkan semua dari tabel kiri, sekalipun tidak ada di tabel kanan</li>
+            <li><strong>Alias (AS):</strong> <code class="bg-amber-100 px-1 rounded">b.judul AS nama_buku</code> — rename kolom agar mudah dibaca</li>
+            <li><strong>GROUP BY:</strong> Mengelompokkan data untuk aggregation (COUNT, SUM)</li>
+          </ul>
+        </div>
+      </div>`
+  },
+  {
+    id: 'create-peminjaman',
+    icon: 'plus-circle',
+    title: 'CREATE Peminjaman — Form Input',
+    content: () => `
+      <div class="space-y-6">
+        <h2 class="text-2xl font-extrabold text-slate-900">➕ Buat Peminjaman Baru</h2>
+        <p class="text-sm text-slate-500 mb-2">📁 <code>peminjaman/create.php</code></p>
+        ${codeBlock(`<?php
+require_once '../config/database.php';
+
+$pesan = "";
+$errors = [];
+
+// Ambil daftar buku yang stok > 0
+$buku_result = mysqli_query($conn, 
+    "SELECT id, judul, penulis, stok FROM buku WHERE stok > 0 ORDER BY judul"
+);
+
+// Ambil daftar anggota aktif
+$anggota_result = mysqli_query($conn,
+    "SELECT id, nama, no_telp FROM anggota WHERE status = 'aktif' ORDER BY nama"
+);
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $id_buku       = intval($_POST['id_buku'] ?? 0);
+    $id_anggota    = intval($_POST['id_anggota'] ?? 0);
+    $tgl_pinjam    = trim($_POST['tgl_pinjam'] ?? '');
+    $durasi        = intval($_POST['durasi'] ?? 7); // Durasi peminjaman (hari)
+    $catatan       = trim(htmlspecialchars($_POST['catatan'] ?? ''));
+
+    // Validasi
+    if ($id_buku === 0)    $errors[] = "Buku wajib dipilih";
+    if ($id_anggota === 0) $errors[] = "Anggota wajib dipilih";
+    if (empty($tgl_pinjam)) $errors[] = "Tanggal pinjam wajib diisi";
+    if ($durasi < 1 || $durasi > 30) $errors[] = "Durasi harus 1-30 hari";
+
+    if (empty($errors)) {
+        // Hitung tgl_kembali_rencana
+        $tgl_kembali = date('Y-m-d', strtotime($tgl_pinjam . " + $durasi days"));
+
+        // Prepared statement INSERT
+        $stmt = mysqli_prepare($conn,
+            "INSERT INTO peminjaman 
+             (id_buku, id_anggota, tgl_pinjam, tgl_kembali_rencana, status, catatan)
+             VALUES (?, ?, ?, ?, 'dipinjam', ?)"
+        );
+        mysqli_stmt_bind_param($stmt, "iisss",
+            $id_buku, $id_anggota, $tgl_pinjam, $tgl_kembali, $catatan
+        );
+
+        if (mysqli_stmt_execute($stmt)) {
+            $pesan = "✅ Peminjaman berhasil dibuat!";
+            header("Location: index.php?status=created");
+            exit;
+        } else {
+            $errors[] = "Gagal: " . mysqli_error($conn);
+        }
+        mysqli_stmt_close($stmt);
+    }
+}
+?>
+<!DOCTYPE html>
+<html lang="id">
+<head><meta charset="UTF-8"><title>Buat Peminjaman</title></head>
+<body>
+    <h1>📝 Buat Peminjaman Baru</h1>
+
+    <?php if (!empty($errors)): ?>
+        <div style="color:red; margin:10px 0;">
+            <?php foreach ($errors as $e): ?>
+                <p>❌ <?= $e ?></p>
+            <?php endforeach; ?>
+        </div>
+    <?php endif; ?>
+
+    <form method="POST">
+        <label>Anggota:
+            <select name="id_anggota" required>
+                <option value="">-- Pilih Anggota --</option>
+                <?php while ($a = mysqli_fetch_assoc($anggota_result)): ?>
+                    <option value="<?= $a['id'] ?>">
+                        <?= htmlspecialchars($a['nama']) ?> (<?= $a['no_telp'] ?>)
+                    </option>
+                <?php endwhile; ?>
+            </select>
+        </label><br><br>
+
+        <label>Buku:
+            <select name="id_buku" required>
+                <option value="">-- Pilih Buku --</option>
+                <?php while ($b = mysqli_fetch_assoc($buku_result)): ?>
+                    <option value="<?= $b['id'] ?>">
+                        <?= htmlspecialchars($b['judul']) ?> — <?= htmlspecialchars($b['penulis']) ?>
+                        (Stok: <?= $b['stok'] ?>)
+                    </option>
+                <?php endwhile; ?>
+            </select>
+        </label><br><br>
+
+        <label>Tanggal Pinjam:
+            <input type="date" name="tgl_pinjam" value="<?= date('Y-m-d') ?>" required>
+        </label><br><br>
+
+        <label>Durasi Peminjaman (hari):
+            <input type="number" name="durasi" min="1" max="30" value="7" required>
+        </label><br><br>
+
+        <label>Catatan:
+            <textarea name="catatan" rows="3" placeholder="Kondisi buku, catatan khusus, dll..."></textarea>
+        </label><br><br>
+
+        <button type="submit">💾 Simpan Peminjaman</button>
+        <a href="index.php">← Kembali</a>
+    </form>
+</body>
+</html>`, 'php')}
+
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-start gap-3">
+          <i data-lucide="lightbulb" class="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0"></i>
+          <div class="text-sm text-blue-800">
+            <strong>Otomatisasi:</strong> Durasi otomatis dihitung jadi tanggal kembali rencana, bukan diinput manual. Ini mencegah kesalahan!
+          </div>
+        </div>
+      </div>`
+  },
+  {
+    id: 'read-peminjaman',
+    icon: 'list',
+    title: 'READ Peminjaman — Laporan JOIN',
+    content: () => `
+      <div class="space-y-6">
+        <h2 class="text-2xl font-extrabold text-slate-900">📊 Laporan Peminjaman (JOIN Query)</h2>
+        <p class="text-sm text-slate-500 mb-2">📁 <code>peminjaman/index.php</code></p>
+        ${codeBlock(`<?php
+require_once '../config/database.php';
+
+$filter_status = $_GET['status'] ?? 'semua';
+$search = trim($_GET['search'] ?? '');
+
+// Build query dengan JOIN
+$query = "SELECT 
+    p.id,
+    p.tgl_pinjam,
+    p.tgl_kembali_rencana,
+    p.tgl_kembali_actual,
+    p.status,
+    p.denda,
+    b.judul AS nama_buku,
+    b.isbn,
+    a.nama AS nama_anggota,
+    a.no_telp
+FROM peminjaman p
+INNER JOIN buku b ON p.id_buku = b.id
+INNER JOIN anggota a ON p.id_anggota = a.id
+WHERE 1=1";
+
+// Filter berdasarkan status
+if ($filter_status !== 'semua') {
+    $query .= " AND p.status = '" . mysqli_real_escape_string($conn, $filter_status) . "'";
+}
+
+// Pencarian
+if (!empty($search)) {
+    $s = mysqli_real_escape_string($conn, $search);
+    $query .= " AND (b.judul LIKE '%$s%' OR a.nama LIKE '%$s%' OR a.no_telp LIKE '%$s%')";
+}
+
+$query .= " ORDER BY p.tgl_pinjam DESC";
+
+$result = mysqli_query($conn, $query);
+?>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Laporan Peminjaman</title>
+    <style>
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 10px; border: 1px solid #ddd; text-align: left; }
+        th { background: #1e293b; color: white; }
+        .status-dipinjam { background: #fef3c7; color: #92400e; }
+        .status-dikembalikan { background: #dcfce7; color: #166534; }
+        .status-hilang { background: #fee2e2; color: #991b1b; }
+        .btn { padding: 5px 10px; border-radius: 4px; margin: 2px; }
+        .btn-edit { background: #3b82f6; color: white; }
+        .btn-delete { background: #ef4444; color: white; }
+    </style>
+</head>
+<body>
+    <h1>📊 Laporan Peminjaman Buku</h1>
+
+    <!-- Filter & Search -->
+    <form method="GET" style="margin:15px 0; display:flex; gap:10px; flex-wrap:wrap;">
+        <select name="status">
+            <option value="semua" <?= $filter_status === 'semua' ? 'selected' : '' ?>>Semua Status</option>
+            <option value="dipinjam" <?= $filter_status === 'dipinjam' ? 'selected' : '' ?>>Sedang Dipinjam</option>
+            <option value="dikembalikan" <?= $filter_status === 'dikembalikan' ? 'selected' : '' ?>>Sudah Dikembalikan</option>
+            <option value="hilang" <?= $filter_status === 'hilang' ? 'selected' : '' ?>>Hilang</option>
+        </select>
+        <input type="text" name="search" placeholder="Cari buku, nama anggota, no telp..."
+               value="<?= htmlspecialchars($search) ?>">
+        <button type="submit">🔍 Filter</button>
+    </form>
+
+    <a href="create.php" style="background:#22c55e; color:white; padding:8px 15px; border-radius:4px; text-decoration:none;">
+        ➕ Buat Peminjaman Baru
+    </a>
+
+    <table>
+        <thead>
+            <tr>
+                <th>No</th><th>Buku (ISBN)</th><th>Anggota</th><th>Tgl Pinjam</th>
+                <th>Kembali Rencana</th><th>Kembali Aktual</th><th>Status</th><th>Denda</th><th>Aksi</th>
+            </tr>
+        </thead>
+        <tbody>
+        <?php
+        $no = 1;
+        while ($p = mysqli_fetch_assoc($result)):
+            $status_class = "status-" . $p['status'];
+        ?>
+            <tr>
+                <td><?= $no++ ?></td>
+                <td>
+                    <strong><?= htmlspecialchars($p['nama_buku']) ?></strong><br>
+                    <span style="font-size:12px; color:#666;">ISBN: <?= $p['isbn'] ?></span>
+                </td>
+                <td><?= htmlspecialchars($p['nama_anggota']) ?><br><span style="font-size:12px;"><?= $p['no_telp'] ?></span></td>
+                <td><?= date('d/m/Y', strtotime($p['tgl_pinjam'])) ?></td>
+                <td><?= date('d/m/Y', strtotime($p['tgl_kembali_rencana'])) ?></td>
+                <td><?= $p['tgl_kembali_actual'] ? date('d/m/Y', strtotime($p['tgl_kembali_actual'])) : '-' ?></td>
+                <td class="<?= $status_class ?>" style="font-weight:600;">
+                    <?= strtoupper($p['status']) ?>
+                </td>
+                <td>Rp <?= number_format($p['denda'], 0, ',', '.') ?></td>
+                <td>
+                    <a href="edit.php?id=<?= $p['id'] ?>" class="btn btn-edit">✏️</a>
+                    <a href="delete.php?id=<?= $p['id'] ?>" class="btn btn-delete" 
+                       onclick="return confirm('Yakin?')">🗑️</a>
+                </td>
+            </tr>
+        <?php endwhile; ?>
+        </tbody>
+    </table>
+
+    <?php if (mysqli_num_rows($result) === 0): ?>
+        <p style="text-align:center; color:#999; padding:20px;">Tidak ada data peminjaman.</p>
+    <?php endif; ?>
+</body>
+</html>`, 'php')}
+
+        <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+          <h3 class="font-bold text-sm text-emerald-800 mb-2">✨ Kunci JOIN</h3>
+          <p class="text-sm text-emerald-700 mb-2"><strong>INNER JOIN</strong> menghubungkan 3 tabel sekaligus:</p>
+          <code class="bg-emerald-100 px-2 py-1 rounded text-xs text-emerald-900">
+            peminjaman p ← [JOIN] → buku b & anggota a
+          </code>
+          <p class="text-xs text-emerald-700 mt-2">Hasilnya: satu baris berisi data peminjaman + buku + anggota</p>
+        </div>
+      </div>`
+  },
+  {
+    id: 'update-peminjaman',
+    icon: 'edit',
+    title: 'UPDATE Peminjaman — Konfirmasi Kembali',
+    content: () => `
+      <div class="space-y-6">
+        <h2 class="text-2xl font-extrabold text-slate-900">✏️ Update Status Peminjaman</h2>
+        <p class="text-sm text-slate-500 mb-2">📁 <code>peminjaman/edit.php</code> — Konfirmasi pengembalian buku</p>
+        ${codeBlock(`<?php
+require_once '../config/database.php';
+
+$id = intval($_GET['id'] ?? 0);
+if ($id === 0) {
+    header("Location: index.php");
+    exit;
+}
+
+// Ambil data peminjaman dengan JOIN
+$stmt = mysqli_prepare($conn,
+    "SELECT p.*, b.judul, b.isbn, a.nama
+     FROM peminjaman p
+     INNER JOIN buku b ON p.id_buku = b.id
+     INNER JOIN anggota a ON p.id_anggota = a.id
+     WHERE p.id = ?"
+);
+mysqli_stmt_bind_param($stmt, "i", $id);
+mysqli_stmt_execute($stmt);
+$result = mysqli_stmt_get_result($stmt);
+$peminjaman = mysqli_fetch_assoc($result);
+
+if (!$peminjaman) {
+    echo "Data peminjaman tidak ditemukan!";
+    exit;
+}
+
+$errors = [];
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $status = trim($_POST['status'] ?? '');
+    $tgl_kembali = trim($_POST['tgl_kembali'] ?? '');
+    $denda = intval($_POST['denda'] ?? 0);
+
+    if (empty($status)) $errors[] = "Status wajib dipilih";
+
+    if (empty($errors)) {
+        // Hitung otomatis denda jika terlambat
+        if ($status === 'dikembalikan' && !empty($tgl_kembali)) {
+            $kembali_rencana = strtotime($peminjaman['tgl_kembali_rencana']);
+            $kembali_aktual = strtotime($tgl_kembali);
+            $hari_telat = max(0, floor(($kembali_aktual - $kembali_rencana) / 86400));
+            $denda = $hari_telat * 5000; // Rp 5000 per hari
+        }
+
+        $stmt = mysqli_prepare($conn,
+            "UPDATE peminjaman 
+             SET status = ?, tgl_kembali_actual = ?, denda = ?
+             WHERE id = ?"
+        );
+        mysqli_stmt_bind_param($stmt, "ssii", $status, $tgl_kembali, $denda, $id);
+
+        if (mysqli_stmt_execute($stmt)) {
+            header("Location: index.php?status=updated");
+            exit;
+        } else {
+            $errors[] = "Gagal update: " . mysqli_error($conn);
+        }
+    }
+}
+?>
+<!DOCTYPE html>
+<html lang="id">
+<head><meta charset="UTF-8"><title>Update Peminjaman</title></head>
+<body>
+    <h1>Update Peminjaman</h1>
+
+    <div style="background:#f0f9ff; border:1px solid #0284c7; padding:10px; border-radius:4px; margin:10px 0;">
+        <p><strong>Buku:</strong> <?= htmlspecialchars($peminjaman['judul']) ?></p>
+        <p><strong>Anggota:</strong> <?= htmlspecialchars($peminjaman['nama']) ?></p>
+        <p><strong>Tgl Pinjam:</strong> <?= date('d/m/Y', strtotime($peminjaman['tgl_pinjam'])) ?></p>
+        <p><strong>Tgl Kembali Rencana:</strong> <?= date('d/m/Y', strtotime($peminjaman['tgl_kembali_rencana'])) ?></p>
+        <p><strong>Status Saat Ini:</strong> <strong style="color:#ea580c;"><?= strtoupper($peminjaman['status']) ?></strong></p>
+    </div>
+
+    <?php if (!empty($errors)): ?>
+        <div style="color:red; margin:10px 0;">
+            <?php foreach ($errors as $e): ?>
+                <p>❌ <?= $e ?></p>
+            <?php endforeach; ?>
+        </div>
+    <?php endif; ?>
+
+    <form method="POST">
+        <label>Status:
+            <select name="status" required>
+                <option value="">-- Pilih Status --</option>
+                <option value="dipinjam">Masih Dipinjam</option>
+                <option value="dikembalikan">Sudah Dikembalikan</option>
+                <option value="hilang">Hilang</option>
+            </select>
+        </label><br><br>
+
+        <label>Tanggal Pengembalian Aktual:
+            <input type="date" name="tgl_kembali">
+            <small style="display:block; color:#666; margin-top:5px;">
+                Isi jika status "Dikembalikan". Denda otomatis dihitung jika terlambat.
+            </small>
+        </label><br><br>
+
+        <label>Denda (Rp):
+            <input type="number" name="denda" value="0" min="0">
+            <small style="display:block; color:#666; margin-top:5px;">
+                Otomatis dihitung, atau bisa diubah manual jika ada kesepakatan khusus.
+            </small>
+        </label><br><br>
+
+        <button type="submit">💾 Simpan Perubahan</button>
+        <a href="index.php">← Kembali</a>
+    </form>
+</body>
+</html>`, 'php')}
+      </div>`
+  },
+  {
+    id: 'laporan-lanjut',
+    icon: 'bar-chart-3',
+    title: 'Laporan Lanjutan (Statistik & Export)',
+    content: () => `
+      <div class="space-y-6">
+        <h2 class="text-2xl font-extrabold text-slate-900">📈 Laporan Statistik & Analytics</h2>
+
+        <h3 class="text-lg font-bold text-slate-800 mb-2">1️⃣ Laporan Buku Paling Populer (GROUP BY)</h3>
+        ${codeBlock(`<?php
+// Buku yang paling banyak dipinjam
+$query = "SELECT 
+    b.id,
+    b.judul,
+    b.penulis,
+    COUNT(p.id) AS total_peminjaman,
+    SUM(CASE WHEN p.status = 'dikembalikan' THEN 1 ELSE 0 END) AS dikembalikan,
+    SUM(CASE WHEN p.status = 'dipinjam' THEN 1 ELSE 0 END) AS masih_dipinjam,
+    SUM(CASE WHEN p.status = 'hilang' THEN 1 ELSE 0 END) AS hilang
+FROM peminjaman p
+INNER JOIN buku b ON p.id_buku = b.id
+GROUP BY b.id, b.judul, b.penulis
+ORDER BY total_peminjaman DESC
+LIMIT 20;";
+
+$result = mysqli_query($conn, $query);
+$no = 1;
+
+echo "<table border='1' cellpadding='10' style='width:100%; margin:20px 0;'>";
+echo "<tr style='background:#1e293b; color:white;'>";
+echo "<th>No</th><th>Buku</th><th>Total Pinjam</th>";
+echo "<th style='background:#22c55e;'>✅ Dikembalikan</th>";
+echo "<th style='background:#f97316;'>📌 Masih Dipinjam</th>";
+echo "<th style='background:#ef4444;'>❌ Hilang</th>";
+echo "</tr>";
+
+while ($row = mysqli_fetch_assoc($result)) {
+    echo "<tr>";
+    echo "<td>" . $no++ . "</td>";
+    echo "<td><strong>" . htmlspecialchars($row['judul']) . "</strong><br><small>" . htmlspecialchars($row['penulis']) . "</small></td>";
+    echo "<td align='center'>" . $row['total_peminjaman'] . "</td>";
+    echo "<td align='center' style='background:#dcfce7;'>" . $row['dikembalikan'] . "</td>";
+    echo "<td align='center' style='background:#fed7aa;'>" . $row['masih_dipinjam'] . "</td>";
+    echo "<td align='center' style='background:#fee2e2;'>" . $row['hilang'] . "</td>";
+    echo "</tr>";
+}
+echo "</table>";
+?>`, 'php')}
+
+        <h3 class="text-lg font-bold text-slate-800 mb-2">2️⃣ Laporan Member Paling Aktif</h3>
+        ${codeBlock(`<?php
+// Anggota yang paling sering meminjam
+$query = "SELECT 
+    a.id,
+    a.nama,
+    a.no_telp,
+    COUNT(p.id) AS total_peminjaman,
+    SUM(p.denda) AS total_denda
+FROM peminjaman p
+INNER JOIN anggota a ON p.id_anggota = a.id
+GROUP BY a.id, a.nama, a.no_telp
+ORDER BY total_peminjaman DESC
+LIMIT 15;";
+
+// Hasil → table dengan total denda
+?>`, 'php')}
+
+        <h3 class="text-lg font-bold text-slate-800 mb-2">3️⃣ Laporan Daftar Menunggak (Terlambat)</h3>
+        ${codeBlock(`<?php
+// Buku belum dikembalikan & sudah melebihi tanggal rencana
+$query = "SELECT 
+    p.id,
+    b.judul,
+    a.nama AS peminjam,
+    a.no_telp,
+    p.tgl_pinjam,
+    p.tgl_kembali_rencana,
+    DATEDIFF(CURDATE(), p.tgl_kembali_rencana) AS hari_telat,
+    (DATEDIFF(CURDATE(), p.tgl_kembali_rencana) * 5000) AS denda_otomatis
+FROM peminjaman p
+INNER JOIN buku b ON p.id_buku = b.id
+INNER JOIN anggota a ON p.id_anggota = a.id
+WHERE p.status = 'dipinjam'
+  AND CURDATE() > p.tgl_kembali_rencana
+ORDER BY hari_telat DESC;";
+
+// Bisa diekspor sebagai CSV atau PDF untuk surat teguran
+?>`, 'php')}
+
+        <h3 class="text-lg font-bold text-slate-800 mb-2">4️⃣ Export CSV (Laporan Peminjaman)</h3>
+        ${codeBlock(`<?php
+// laporan/export_csv.php
+require_once '../config/database.php';
+
+$query = "SELECT 
+    p.id, b.judul, b.isbn, a.nama, 
+    p.tgl_pinjam, p.tgl_kembali_rencana, p.status, p.denda
+FROM peminjaman p
+INNER JOIN buku b ON p.id_buku = b.id
+INNER JOIN anggota a ON p.id_anggota = a.id
+ORDER BY p.tgl_pinjam DESC";
+
+$result = mysqli_query($conn, $query);
+
+// Header untuk download
+header('Content-Type: text/csv; charset=utf-8');
+header('Content-Disposition: attachment; filename=laporan_peminjaman_' . date('Y-m-d') . '.csv');
+
+// BOM untuk Excel (agar charset UTF-8 bekerja)
+echo "\xEF\xBB\xBF";
+
+// Header CSV
+$headers = ['ID', 'Judul Buku', 'ISBN', 'Nama Anggota', 'Tgl Pinjam', 'Tgl Kembali', 'Status', 'Denda'];
+echo implode(',', $headers) . "\\n";
+
+// Data rows
+while ($row = mysqli_fetch_assoc($result)) {
+    $data = [
+        $row['id'],
+        '"' . str_replace('"', '""', $row['judul']) . '"',
+        $row['isbn'],
+        '"' . str_replace('"', '""', $row['nama']) . '"',
+        $row['tgl_pinjam'],
+        $row['tgl_kembali_rencana'],
+        $row['status'],
+        $row['denda']
+    ];
+    echo implode(',', $data) . "\\n";
+}
+
+exit;
+?>`, 'php')}
+
+        <div class="bg-purple-50 border border-purple-200 rounded-xl p-4">
+          <h3 class="font-bold text-sm text-purple-800 mb-2">🎯 Konsep Advanced</h3>
+          <ul class="text-sm text-purple-700 space-y-1">
+            <li><strong>GROUP BY + COUNT:</strong> Agregasi data untuk statistik</li>
+            <li><strong>CASE WHEN:</strong> Kondisional di query untuk kategori</li>
+            <li><strong>DATEDIFF:</strong> Hitung selisih hari otomatis</li>
+            <li><strong>CSV Export:</strong> Bisa dibuka Excel & analisis lebih lanjut</li>
+          </ul>
+        </div>
+      </div>`
+  },
+  {
+    id: 'ringkasan',
+    icon: 'award',
+    title: 'Ringkasan & Referensi',
+    content: () => `
+      <div class="space-y-6">
+        <h2 class="text-2xl font-extrabold text-slate-900">🏆 Ringkasan</h2>
+        <div class="grid sm:grid-cols-2 gap-4">
+          ${[
+            {op:'CREATE', color:'emerald', icon:'plus-circle', desc:'INSERT INTO ... VALUES (prepared statement)'},
+            {op:'READ', color:'blue', icon:'list', desc:'SELECT * FROM ... WHERE (dengan pencarian)'},
+            {op:'UPDATE', color:'amber', icon:'edit', desc:'UPDATE ... SET ... WHERE id=? (prepared statement)'},
+            {op:'DELETE', color:'rose', icon:'trash-2', desc:'DELETE FROM ... WHERE id=? (prepared statement)'}
+          ].map(c => `
+            <div class="bg-${c.color}-50 border border-${c.color}-200 rounded-xl p-4">
+              <div class="flex items-center gap-2 mb-1">
+                <i data-lucide="${c.icon}" class="w-5 h-5 text-${c.color}-500"></i>
+                <h3 class="font-bold text-${c.color}-800">${c.op}</h3>
+              </div>
+              <p class="text-xs text-${c.color}-700">${c.desc}</p>
+            </div>
+          `).join('')}
+        </div>
+
+        <div class="bg-white rounded-xl border border-slate-200 p-5">
+          <h3 class="font-bold text-sm mb-3">✅ Checklist Keamanan</h3>
+          <ul class="space-y-2 text-sm text-slate-700">
+            ${['Gunakan <strong>Prepared Statements</strong> untuk semua query','Sanitasi input dengan <strong>htmlspecialchars()</strong>','Validasi data di sisi server (jangan hanya client)','Gunakan <strong>POST</strong> untuk operasi yang mengubah data','Set charset <strong>utf8mb4</strong> pada koneksi','Hindari menampilkan error MySQL ke user di produksi'].map(t => `
+              <li class="flex items-start gap-2">
+                <span class="text-emerald-500 mt-0.5">☑️</span><span>${t}</span>
+              </li>
+            `).join('')}
+          </ul>
+        </div>
+
+        <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 text-white">
+          <h3 class="font-bold text-lg mb-3">📚 Referensi Lanjutan</h3>
+          <ul class="space-y-2 text-sm text-slate-300">
+            <li>• <strong>PHP Manual:</strong> php.net/manual/en/book.mysqli.php</li>
+            <li>• <strong>PDO Tutorial:</strong> php.net/manual/en/book.pdo.php</li>
+            <li>• <strong>SQL Injection Prevention:</strong> OWASP Cheat Sheet</li>
+            <li>• <strong>XAMPP Download:</strong> apachefriends.org</li>
+          </ul>
+          <div class="mt-4 pt-4 border-t border-slate-700 text-center">
+            <p class="text-slate-400 text-xs">Modul dibuat untuk keperluan pembelajaran. Selamat belajar! 🚀</p>
+          </div>
+        </div>
+      </div>`
+  }
+];
+
+// ─── Helper Functions ────────────────────────────────────
+function codeBlock(code, lang) {
+  const escaped = code.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return `<div class="code-block bg-slate-900 text-slate-100 p-4 text-xs leading-relaxed relative">
+    <button class="copy-btn px-2.5 py-1 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-md text-[10px] font-semibold transition" onclick="copyCode(this)">📋 Copy</button>
+    <pre><code>${escaped}</code></pre>
+  </div>`;
+}
+
+// ─── App State & Navigation ──────────────────────────────
+let currentIdx = 0;
+
+function renderNav() {
+  const nav = document.getElementById('nav-links');
+  nav.innerHTML = modules.map((m, i) => `
+    <button onclick="goTo(${i})" class="sidebar-link flex items-center gap-2.5 px-3 py-2 rounded-r-lg text-sm text-left ${i === currentIdx ? 'active' : 'text-slate-600'}">
+      <i data-lucide="${m.icon}" class="w-4 h-4 flex-shrink-0"></i>
+      <span class="truncate">${m.title}</span>
+    </button>
+  `).join('');
+  lucide.createIcons();
+}
+
+function renderContent() {
+  const area = document.getElementById('content-area');
+  area.className = 'fade-in';
+  area.innerHTML = modules[currentIdx].content();
+
+  document.getElementById('btn-prev').disabled = currentIdx === 0;
+  document.getElementById('btn-next').disabled = currentIdx === modules.length - 1;
+
+  const pct = ((currentIdx + 1) / modules.length * 100).toFixed(0);
+  document.getElementById('progress-bar').style.width = pct + '%';
+  document.getElementById('progress-text').textContent = `${currentIdx + 1} / ${modules.length}`;
+
+  document.getElementById('main-content').scrollTop = 0;
+  lucide.createIcons();
+}
+
+function goTo(idx) {
+  currentIdx = idx;
+  renderNav();
+  renderContent();
+}
+
+window.copyCode = function(btn) {
+  const code = btn.parentElement.querySelector('code').textContent;
+  navigator.clipboard.writeText(code).then(() => {
+    const orig = btn.innerHTML;
+    btn.innerHTML = '✅ Copied!';
+    setTimeout(() => btn.innerHTML = orig, 1500);
+  });
+};
+
+window.switchTab = function(btn, tab) {
+  btn.closest('.space-y-2').querySelectorAll('.tab-btn').forEach(b => {
+    b.classList.remove('tab-active');
+    b.classList.add('border-transparent', 'text-slate-400');
+  });
+  btn.classList.add('tab-active');
+  btn.classList.remove('border-transparent', 'text-slate-400');
+  document.getElementById('tab-mysqli').classList.toggle('hidden', tab !== 'mysqli');
+  document.getElementById('tab-pdo').classList.toggle('hidden', tab !== 'pdo');
+};
+
+document.getElementById('btn-prev').addEventListener('click', () => { if (currentIdx > 0) goTo(currentIdx - 1); });
+document.getElementById('btn-next').addEventListener('click', () => { if (currentIdx < modules.length - 1) goTo(currentIdx + 1); });
+
+// Sidebar toggle mobile
+document.getElementById('sidebar-toggle').addEventListener('click', () => {
+  const sb = document.getElementById('sidebar');
+  sb.classList.toggle('hidden');
+  sb.classList.toggle('flex');
+  sb.classList.toggle('absolute');
+  sb.classList.toggle('z-50');
+  sb.classList.toggle('h-full');
+});
+
+// ─── Element SDK ─────────────────────────────────────────
+const defaultConfig = {
+  module_title: 'Modul CRUD Perpustakaan Digital',
+  background_color: '#f8fafc',
+  surface_color: '#ffffff',
+  text_color: '#1e293b',
+  primary_color: '#f97316',
+  secondary_color: '#1e293b'
+};
+
+function applyConfig(config) {
+  const c = { ...defaultConfig, ...config };
+  document.getElementById('module-title').textContent = c.module_title;
+  document.body.style.background = c.background_color;
+  document.getElementById('main-header').style.background = c.secondary_color;
+}
+
+window.elementSdk.init({
+  defaultConfig,
+  onConfigChange: async (config) => applyConfig(config),
+  mapToCapabilities: (config) => ({
+    recolorables: [
+      { get: () => config.background_color || defaultConfig.background_color, set: v => { config.background_color = v; window.elementSdk.setConfig({ background_color: v }); }},
+      { get: () => config.surface_color || defaultConfig.surface_color, set: v => { config.surface_color = v; window.elementSdk.setConfig({ surface_color: v }); }},
+      { get: () => config.text_color || defaultConfig.text_color, set: v => { config.text_color = v; window.elementSdk.setConfig({ text_color: v }); }},
+      { get: () => config.primary_color || defaultConfig.primary_color, set: v => { config.primary_color = v; window.elementSdk.setConfig({ primary_color: v }); }},
+      { get: () => config.secondary_color || defaultConfig.secondary_color, set: v => { config.secondary_color = v; window.elementSdk.setConfig({ secondary_color: v }); }}
+    ],
+    borderables: [],
+    fontEditable: {
+      get: () => config.font_family || 'Plus Jakarta Sans',
+      set: v => { config.font_family = v; window.elementSdk.setConfig({ font_family: v }); }
+    },
+    fontSizeable: {
+      get: () => config.font_size || 14,
+      set: v => { config.font_size = v; window.elementSdk.setConfig({ font_size: v }); }
+    }
+  }),
+  mapToEditPanelValues: (config) => new Map([
+    ['module_title', config.module_title || defaultConfig.module_title]
+  ])
+});
+
+// Initial render
+renderNav();
+renderContent();
+</script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9edff091e33fce26',t:'MTc3NjQ3NjE5OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
